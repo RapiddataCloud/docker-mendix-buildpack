@@ -50,7 +50,7 @@ LABEL maintainer="digitalecosystems@mendix.com"
 
 ## Chromium install
 RUN curl -fsSL https://rpm.nodesource.com/setup_20.x | bash - && \
-    microdnf install nodejs -y
+    dnf install -y nodejs
 
 # Install necessary packages
 RUN dnf install -y \
