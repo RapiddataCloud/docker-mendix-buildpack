@@ -48,23 +48,33 @@ FROM ${ROOTFS_IMAGE}
 LABEL Author="Mendix Digital Ecosystems"
 LABEL maintainer="digitalecosystems@mendix.com"
 
-# Runtime stage
-FROM registry.access.redhat.com/ubi9/ubi:latest
-
-# Install necessary tools with conflict resolution
-RUN yum update -y && \
-    yum install -y --allowerasing curl gnupg
-
-# Install Node.js
-RUN curl -fsSL https://rpm.nodesource.com/setup_18.x | bash - && \
-    yum install -y nodejs
-
-# Install EPEL repository manually
-RUN curl -o /tmp/epel-release-latest-9.noarch.rpm https://mirror.centos.org/centos/9-stream/updates/x86_64/Packages/epel-release-9-2.el9.noarch.rpm && \
-    yum localinstall -y /tmp/epel-release-latest-9.noarch.rpm
-
-# Install Chromium
-RUN yum install -y chromium
+RUN curl -fsSL https://rpm.nodesource.com/setup_20.x | bash - && \
+    microdnf install nodejs -y
+ 
+RUN microdnf install -y \
+    nss \
+    atk \
+    at-spi2-atk \
+    gtk3 \
+    libdrm \
+    libX11 \
+    libXcomposite \
+    libXcursor \
+    libXdamage \
+    libXext \
+    libXi \
+    libXrandr \
+    libXrender \
+    libXtst \
+    mesa-libgbm \
+    cups-libs \
+    alsa-lib && \
+    microdnf clean all
+ 
+RUN mkdir -p /opt/chrome && \
+    wget https://storage.googleapis.com/chromium-browser-snapshots/Linux_x64/1109252/chrome-linux.zip -O /tmp/chrome-linux.zip && \
+    unzip /tmp/chrome-linux.zip -d /opt/chrome && \
+    rm /tmp/chrome-linux.zip
 
 # Verify installations
 RUN node -v && \
