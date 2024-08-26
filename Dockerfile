@@ -60,7 +60,6 @@ FROM registry.access.redhat.com/ubi9/ubi:latest
 # Install necessary tools and dependencies
 RUN dnf install -y \
     dnf-plugins-core && \
-    dnf config-manager --set-enabled crb && \
     dnf install -y chromium qt5-qtbase qt5-qtbase-gui qt5-qtx11extras \
     libcanberra-gtk3 libXNVCtrl pipewire-libs --nogpgcheck && \
     dnf clean all
