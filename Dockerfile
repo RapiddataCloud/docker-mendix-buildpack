@@ -48,9 +48,21 @@ FROM ${ROOTFS_IMAGE}
 LABEL Author="Mendix Digital Ecosystems"
 LABEL maintainer="digitalecosystems@mendix.com"
 
-RUN curl -fsSL https://rpm.nodesource.com/setup_20.x | bash - && \
-    microdnf install nodejs -y
+# Install necessary tools and Node.js dependencies
+RUN microdnf install -y \
+    gcc-c++ \
+    make \
+    tar \
+    xz \
+    wget \
+    unzip
  
+# Download and install Node.js from binary
+RUN curl -fsSL https://nodejs.org/dist/v20.5.1/node-v20.5.1-linux-x64.tar.xz -o node-v20.5.1-linux-x64.tar.xz && \
+    tar -xJf node-v20.5.1-linux-x64.tar.xz -C /usr/local --strip-components=1 --no-same-owner && \
+    rm node-v20.5.1-linux-x64.tar.xz
+ 
+# Install necessary dependencies for Chromium
 RUN microdnf install -y \
     nss \
     atk \
@@ -71,23 +83,11 @@ RUN microdnf install -y \
     alsa-lib && \
     microdnf clean all
  
+# Download and extract Chromium
 RUN mkdir -p /opt/chrome && \
     wget https://storage.googleapis.com/chromium-browser-snapshots/Linux_x64/1109252/chrome-linux.zip -O /tmp/chrome-linux.zip && \
     unzip /tmp/chrome-linux.zip -d /opt/chrome && \
     rm /tmp/chrome-linux.zip
-
-# Verify installations
-RUN node -v && \
-    npm -v && \
-    chromium --version
-
-# Your application setup goes here
-# COPY . /app
-# WORKDIR /app
-# RUN npm install
-
-# Define the entry point for your container
-# CMD ["node", "your-app.js"]
 
 # Set the user ID
 ARG USER_UID=1001
