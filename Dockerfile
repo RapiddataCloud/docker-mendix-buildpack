@@ -60,7 +60,7 @@ RUN curl -fsSL https://rpm.nodesource.com/setup_18.x | bash - && \
     yum install -y nodejs
 
 # Install EPEL repository manually
-RUN curl -o /tmp/epel-release-latest-9.noarch.rpm https://mirror.centos.org/centos/9-stream/updates/x86_64/Packages/epel-release-9-1.el9.noarch.rpm && \
+RUN curl -o /tmp/epel-release-latest-9.noarch.rpm https://mirror.centos.org/centos/9-stream/updates/x86_64/Packages/epel-release-9-2.el9.noarch.rpm && \
     yum localinstall -y /tmp/epel-release-latest-9.noarch.rpm
 
 # Install Chromium
