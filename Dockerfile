@@ -59,9 +59,9 @@ RUN yum update -y && \
 RUN curl -fsSL https://rpm.nodesource.com/setup_18.x | bash - && \
     yum install -y nodejs
 
-# Manually add the EPEL repository
-RUN curl -o /etc/yum.repos.d/epel.repo https://download.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
-    yum install -y epel-release
+# Install EPEL repository manually
+RUN curl -o /tmp/epel-release-latest-9.noarch.rpm https://mirror.centos.org/centos/9-stream/updates/x86_64/Packages/epel-release-9-1.el9.noarch.rpm && \
+    yum localinstall -y /tmp/epel-release-latest-9.noarch.rpm
 
 # Install Chromium
 RUN yum install -y chromium
@@ -70,6 +70,14 @@ RUN yum install -y chromium
 RUN node -v && \
     npm -v && \
     chromium --version
+
+# Your application setup goes here
+# COPY . /app
+# WORKDIR /app
+# RUN npm install
+
+# Define the entry point for your container
+# CMD ["node", "your-app.js"]
 
 # Set the user ID
 ARG USER_UID=1001
