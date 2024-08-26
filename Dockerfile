@@ -59,9 +59,12 @@ RUN yum update -y && \
 RUN curl -fsSL https://rpm.nodesource.com/setup_18.x | bash - && \
     yum install -y nodejs
 
-# Install EPEL repository for Chromium
-RUN yum install -y epel-release && \
-    yum install -y chromium
+# Manually add the EPEL repository
+RUN curl -o /etc/yum.repos.d/epel.repo https://download.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm && \
+    yum install -y epel-release
+
+# Install Chromium
+RUN yum install -y chromium
 
 # Verify installations
 RUN node -v && \
