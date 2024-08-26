@@ -49,6 +49,8 @@ LABEL Author="Mendix Digital Ecosystems"
 LABEL maintainer="digitalecosystems@mendix.com"
 
 ## Chromium install
+FROM registry.access.redhat.com/ubi8/ubi
+
 RUN curl -fsSL https://rpm.nodesource.com/setup_20.x | bash - && \
     dnf install -y nodejs
 
