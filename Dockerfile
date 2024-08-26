@@ -48,12 +48,12 @@ FROM ${ROOTFS_IMAGE}
 LABEL Author="Mendix Digital Ecosystems"
 LABEL maintainer="digitalecosystems@mendix.com"
 
-# Use a base image that is compatible with RHEL 9
+# Use a base image compatible with RHEL 9
 FROM registry.access.redhat.com/ubi9/ubi:latest
 
-# Install necessary tools
+# Install necessary tools with conflict resolution
 RUN yum update -y && \
-    yum install -y curl gnupg
+    yum install -y --allowerasing curl gnupg
 
 # Install Node.js
 RUN curl -fsSL https://rpm.nodesource.com/setup_18.x | bash - && \
