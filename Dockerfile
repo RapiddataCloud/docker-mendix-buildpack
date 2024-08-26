@@ -48,24 +48,25 @@ FROM ${ROOTFS_IMAGE}
 LABEL Author="Mendix Digital Ecosystems"
 LABEL maintainer="digitalecosystems@mendix.com"
 
-## Chromium install
-FROM registry.access.redhat.com/ubi8/ubi
-
-RUN curl -fsSL https://rpm.nodesource.com/setup_20.x | bash - && \
-    dnf install -y nodejs
-
-# Use RHEL UBI as the base image
+# Use a base image that is compatible with RHEL 9
 FROM registry.access.redhat.com/ubi9/ubi:latest
 
-# Install necessary tools and dependencies
-RUN dnf install -y \
-    dnf-plugins-core && \
-    dnf install -y chromium qt5-qtbase qt5-qtbase-gui qt5-qtx11extras \
-    libcanberra-gtk3 libXNVCtrl pipewire-libs --nogpgcheck && \
-    dnf clean all
+# Install necessary tools
+RUN yum update -y && \
+    yum install -y curl gnupg
 
-# Verify Chromium installation
-RUN chromium --version || true
+# Install Node.js
+RUN curl -fsSL https://rpm.nodesource.com/setup_18.x | bash - && \
+    yum install -y nodejs
+
+# Install EPEL repository for Chromium
+RUN yum install -y epel-release && \
+    yum install -y chromium
+
+# Verify installations
+RUN node -v && \
+    npm -v && \
+    chromium --version
 
 # Set the user ID
 ARG USER_UID=1001
