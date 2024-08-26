@@ -48,39 +48,6 @@ FROM ${ROOTFS_IMAGE}
 LABEL Author="Mendix Digital Ecosystems"
 LABEL maintainer="digitalecosystems@mendix.com"
 
-## Chromimum install
-RUN curl -fsSL https://rpm.nodesource.com/setup_20.x | bash - && \
-    microdnf install nodejs -y
-RUN microdnf install -y dnf
-RUN dnf install -y dnf-plugins-core
- 
-# Install EPEL repository
-RUN dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
- 
-# Add CentOS Vault repositories for additional packages
-RUN dnf config-manager --add-repo=https://vault.centos.org/8.4.2105/BaseOS/x86_64/os/ && \
-    dnf config-manager --add-repo=https://vault.centos.org/8.4.2105/AppStream/x86_64/os/ && \
-    dnf config-manager --add-repo=https://vault.centos.org/8.4.2105/PowerTools/x86_64/os/
- 
-# Disable GPG checks
-RUN sed -i 's/gpgcheck=1/gpgcheck=0/' /etc/yum.repos.d/*.repo
- 
-# Clean metadata and cache to prevent issues
-RUN dnf clean all && dnf makecache
- 
-# Install required dependencies for Chromium
-RUN dnf install -y --nogpgcheck \
-    chromium \
-    qt5-qtbase \
-    qt5-qtbase-gui \
-    qt5-qtx11extras \
-    libcanberra-gtk3 \
-    libXNVCtrl \
-    pipewire-libs
- 
-# Verify Chromium installation
-RUN chromium --version || true
-
 # Set the user ID
 ARG USER_UID=1001
 # Set the home path
