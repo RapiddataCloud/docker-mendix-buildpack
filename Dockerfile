@@ -48,7 +48,7 @@ FROM ${ROOTFS_IMAGE}
 LABEL Author="Mendix Digital Ecosystems"
 LABEL maintainer="digitalecosystems@mendix.com"
 
-# Use a base image compatible with RHEL 9
+# Runtime stage
 FROM registry.access.redhat.com/ubi9/ubi:latest
 
 # Install necessary tools with conflict resolution
