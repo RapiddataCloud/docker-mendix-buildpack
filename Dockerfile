@@ -2,7 +2,7 @@
 # Mendix Deployment Archive (aka mda file)
 #
 # Author: Mendix Digital Ecosystems, digitalecosystems@mendix.com
-# Version: 5.1.0
+# Version: 5.1.1
 ARG ROOTFS_IMAGE=mendix-rootfs:app
 ARG BUILDER_ROOTFS_IMAGE=mendix-rootfs:builder
 
@@ -12,6 +12,7 @@ FROM ${BUILDER_ROOTFS_IMAGE} AS builder
 # Build-time variables
 ARG BUILD_PATH=project
 ARG DD_API_KEY
+ARG USER_UID=1001
 
 # Exclude the logfilter binary by default
 ARG EXCLUDE_LOGFILTER=true
@@ -48,21 +49,30 @@ FROM ${ROOTFS_IMAGE}
 LABEL Author="Mendix Digital Ecosystems"
 LABEL maintainer="digitalecosystems@mendix.com"
 
-# Install necessary tools and Node.js dependencies
+# Set the user ID (declared early so it's available for chown in subsequent layers)
+ARG USER_UID=1001
+
+# Set the home path
+ENV HOME=/opt/mendix/build
+
+# Install necessary tools and Node.js build dependencies
 RUN microdnf install -y \
     gcc-c++ \
     make \
     tar \
     xz \
     wget \
-    unzip
- 
+    unzip && \
+    microdnf clean all
+
 # Download and install Node.js from binary
-RUN curl -fsSL https://nodejs.org/dist/v20.5.1/node-v20.5.1-linux-x64.tar.xz -o node-v20.5.1-linux-x64.tar.xz && \
-    tar -xJf node-v20.5.1-linux-x64.tar.xz -C /usr/local --strip-components=1 --no-same-owner && \
-    rm node-v20.5.1-linux-x64.tar.xz
- 
-# Install necessary dependencies for Chromium
+RUN curl -fsSL https://nodejs.org/dist/v20.5.1/node-v20.5.1-linux-x64.tar.xz -o /tmp/node-v20.5.1-linux-x64.tar.xz && \
+    tar -xJf /tmp/node-v20.5.1-linux-x64.tar.xz -C /usr/local --strip-components=1 --no-same-owner && \
+    rm /tmp/node-v20.5.1-linux-x64.tar.xz && \
+    node --version && npm --version
+
+# Install necessary dependencies for headless Chromium
+# Added: libxshmfence, libxkbcommon, liberation-fonts, dejavu-sans-fonts
 RUN microdnf install -y \
     nss \
     atk \
@@ -78,24 +88,32 @@ RUN microdnf install -y \
     libXrandr \
     libXrender \
     libXtst \
+    libxshmfence \
+    libxkbcommon \
     mesa-libgbm \
     cups-libs \
-    alsa-lib && \
+    alsa-lib \
+    liberation-fonts \
+    dejavu-sans-fonts && \
     microdnf clean all
- 
-# Download and extract Chromium
-RUN mkdir -p /opt/chrome && \
-    wget https://storage.googleapis.com/chromium-browser-snapshots/Linux_x64/1109252/chrome-linux.zip -O /tmp/chrome-linux.zip && \
-    unzip /tmp/chrome-linux.zip -d /opt/chrome && \
-    rm /tmp/chrome-linux.zip
 
-# Set the user ID
-ARG USER_UID=1001
-# Set the home path
-ENV HOME=/opt/mendix/build
+# Download and extract Chromium, then fix ownership/permissions for non-root user
+RUN mkdir -p /opt/chrome && \
+    wget -q https://storage.googleapis.com/chromium-browser-snapshots/Linux_x64/1109252/chrome-linux.zip -O /tmp/chrome-linux.zip && \
+    unzip -q /tmp/chrome-linux.zip -d /opt/chrome && \
+    rm /tmp/chrome-linux.zip && \
+    chown -R ${USER_UID}:0 /opt/chrome && \
+    chmod -R g=u /opt/chrome && \
+    chmod +x /opt/chrome/chrome-linux/chrome && \
+    ln -s /opt/chrome/chrome-linux/chrome /usr/local/bin/chromium
+
+# Expose Chromium path for Puppeteer / document generation libs
+ENV CHROME_BIN=/opt/chrome/chrome-linux/chrome
+ENV PUPPETEER_EXECUTABLE_PATH=/opt/chrome/chrome-linux/chrome
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
 
 # Add the buildpack modules
-ENV PYTHONPATH "/opt/mendix/buildpack/lib/:/opt/mendix/buildpack/:/opt/mendix/buildpack/lib/python3.11/site-packages/"
+ENV PYTHONPATH="/opt/mendix/buildpack/lib/:/opt/mendix/buildpack/:/opt/mendix/buildpack/lib/python3.11/site-packages/"
 
 # Copy start scripts
 COPY scripts/startup.py scripts/vcap_application.json /opt/mendix/build/
@@ -126,7 +144,7 @@ ENV NGINX_CUSTOM_BIN_PATH=/usr/sbin/nginx
 WORKDIR /opt/mendix/build
 
 # Expose nginx port
-ENV PORT 8080
+ENV PORT=8080
 EXPOSE $PORT
 
 ENTRYPOINT ["/opt/mendix/build/startup.py"]
