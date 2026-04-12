@@ -2,7 +2,7 @@
 # Mendix Deployment Archive (aka mda file)
 #
 # Author: Mendix Digital Ecosystems, digitalecosystems@mendix.com
-# Version: 5.1.1
+# Version: 5.1.1 (customized with Node.js + Chromium for document generation)
 ARG ROOTFS_IMAGE=mendix-rootfs:app
 ARG BUILDER_ROOTFS_IMAGE=mendix-rootfs:builder
 
@@ -27,15 +27,6 @@ COPY $BUILD_PATH /opt/mendix/build
 # Use nginx supplied by the base OS
 ENV NGINX_CUSTOM_BIN_PATH=/usr/sbin/nginx
 
-# Each comment corresponds to the script line:
-# 1. Create cache directory and directory for dependencies which can be shared
-# 2. Set permissions for compilation scripts
-# 3. Navigate to buildpack directory
-# 4. Call compilation script
-# 5. Remove temporary files
-# 6. Create symlink for java prefs used by CF buildpack
-# 7. Update ownership of /opt/mendix so that the app can run as a non-root user
-# 8. Update permissions of /opt/mendix so that the app can run as a non-root user
 RUN mkdir -p /tmp/buildcache /tmp/cf-deps /var/mendix/build /var/mendix/build/.local &&\
     chmod +rx /opt/mendix/buildpack/compilation.py /opt/mendix/buildpack/git /opt/mendix/buildpack/buildpack/stage.py &&\
     cd /opt/mendix/buildpack &&\
@@ -72,7 +63,6 @@ RUN curl -fsSL https://nodejs.org/dist/v20.5.1/node-v20.5.1-linux-x64.tar.xz -o 
     node --version && npm --version
 
 # Install necessary dependencies for headless Chromium
-# Added: libxshmfence, libxkbcommon, liberation-fonts, dejavu-sans-fonts
 RUN microdnf install -y \
     nss \
     atk \
@@ -123,11 +113,6 @@ RUN mkdir -p /home/vcap /opt/datadog-agent/run &&\
     chown -R ${USER_UID}:0 /home/vcap /opt/datadog-agent/run &&\
     chmod -R g=u /home/vcap /opt/datadog-agent/run
 
-# Each comment corresponds to the script line:
-# 1. Make the startup script executable
-# 2. Update ownership of /opt/mendix so that the app can run as a non-root user
-# 3. Update permissions of /opt/mendix so that the app can run as a non-root user
-# 4. Ensure that running Java 8 as root will still be able to load offline licenses
 RUN chmod +rx /opt/mendix/build/startup.py &&\
     chown -R ${USER_UID}:0 /opt/mendix &&\
     chmod -R g=u /opt/mendix &&\
